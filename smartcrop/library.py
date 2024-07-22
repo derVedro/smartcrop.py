@@ -15,7 +15,7 @@ def saturation(image) -> np.ndarray:
     maximum = np.maximum(np.maximum(r, g), b)  # [0; 255]
     minimum = np.minimum(np.minimum(r, g), b)  # [0; 255]
     s = (maximum + minimum) / 255  # [0.0; 1.0] pylint:disable=invalid-name
-    d = (maximum - minimum) / 255  # [0.0; 1.0] pylint:disable=invalid-name    
+    d = (maximum - minimum) / 255  # [0.0; 1.0] pylint:disable=invalid-name
     s[maximum == minimum] = 1  # avoid division by zero
     mask = s > 1
     s[mask] = 2 - d[mask]
@@ -25,7 +25,7 @@ def saturation(image) -> np.ndarray:
 def thirds(x):
     """gets value in the range of [0, 1] where 0 is the center of the pictures
     returns weight of rule of thirds [0, 1]"""
-    x = 8 * (x + 2 / 3) - 8    # 8*x-8/3 is even simpler, but with ~e-16 floating error 
+    x = 8 * (x + 2 / 3) - 8    # 8*x-8/3 is even simpler, but with ~e-16 floating error
     return max(1 - x * x, 0)
 
 
@@ -217,44 +217,33 @@ class SmartCrop(object):  # pylint:disable=too-many-instance-attributes
 
         ratio_horizontal = debug_image.size[0] / orig_size[0]
         ratio_vertical = debug_image.size[1] / orig_size[1]
-        fake_crop_x = crop['x'] * ratio_horizontal
-        fake_crop_y = crop['y'] * ratio_vertical
-        fake_crop_width = crop['width'] * ratio_horizontal
-        fake_crop_height = crop['height'] * ratio_vertical
         fake_crop = {
-            'x': fake_crop_x,
-            'y': fake_crop_y,
-            'width': fake_crop_width,
-            'height': fake_crop_height,
+            'x': crop['x'] * ratio_horizontal,
+            'y': crop['y'] * ratio_vertical,
+            'width': crop['width'] * ratio_horizontal,
+            'height': crop['height'] * ratio_vertical,
         }
 
         for y in range(analyse_image.size[1]):        # height
             for x in range(analyse_image.size[0]):    # width
                 index = y * analyse_image.size[0] + x
                 importance = self.importance(fake_crop, x, y)
-                if importance > 0:
-                    debug_pixels.putpixel(
-                        (x, y),
-                        (
-                            debug_pixels[index][0],
-                            int(debug_pixels[index][1] + importance * 32),
-                            debug_pixels[index][2]
-                        ))
-                elif importance < 0:
-                    debug_pixels.putpixel(
-                        (x, y),
-                        (
-                            int(debug_pixels[index][0] + importance * -64),
-                            debug_pixels[index][1],
-                            debug_pixels[index][2]
-                        ))
+                redder, greener = (-64, 0) if importance < 0 else (0, 32)
+                debug_pixels.putpixel(
+                    (x, y),
+                    (
+                        debug_pixels[index][0] + int(importance * redder),
+                        debug_pixels[index][1] + int(importance * greener),
+                        debug_pixels[index][2]
+                    ))
+
         # in case you want a whitish outline to mark the crop
-        # ImageDraw.Draw(debug_image).rectangle([fake_crop_x,
-        #                                        fake_crop_y,
-        #                                        fake_crop_x + fake_crop_width,
-        #                                        fake_crop_y + fake_crop_height],
+        # ImageDraw.Draw(debug_image).rectangle([fake_crop['x'],
+        #                                        fake_crop['y'],
+        #                                        fake_crop['x'] + fake_crop['width'],
+        #                                        fake_crop['y'] + fake_crop['height']],
         #                                        outline=(175, 175, 175), width=2)
-        
+
         return debug_image
 
     def detect_edge(self, cie_image):
