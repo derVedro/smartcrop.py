@@ -126,8 +126,8 @@ class SmartCrop:  # pylint:disable=too-many-instance-attributes
     ) -> dict:
         """Not yet fully cleaned from https://github.com/hhatto/smartcrop.py."""
         scale = min(image.size[0] / width, image.size[1] / height)
-        crop_width = int(math.floor(width * scale))
-        crop_height = int(math.floor(height * scale))
+        crop_width = int(width * scale)
+        crop_height = int(height * scale)
         # img = 100x100, width = 95x95, scale = 100/95, 1/scale > min
         # don't set minscale smaller than 1/scale
         # -> don't pick crops that need upscaling
@@ -140,8 +140,8 @@ class SmartCrop:  # pylint:disable=too-many-instance-attributes
                 image = image.resize(
                     (int(image.size[0] * prescale_size), int(image.size[1] * prescale_size)),
                     Image.Resampling.LANCZOS)
-                crop_width = int(math.floor(crop_width * prescale_size))
-                crop_height = int(math.floor(crop_height * prescale_size))
+                crop_width = int(crop_width * prescale_size)
+                crop_height = int(crop_height * prescale_size)
             else:
                 prescale_size = 1
 
@@ -156,10 +156,10 @@ class SmartCrop:  # pylint:disable=too-many-instance-attributes
 
         for i in range(len(result['crops'])):
             crop = result['crops'][i]
-            crop['x'] = int(math.floor(crop['x'] / prescale_size))
-            crop['y'] = int(math.floor(crop['y'] / prescale_size))
-            crop['width'] = int(math.floor(crop['width'] / prescale_size))
-            crop['height'] = int(math.floor(crop['height'] / prescale_size))
+            crop['x'] = int(crop['x'] / prescale_size)
+            crop['y'] = int(crop['y'] / prescale_size)
+            crop['width'] = int(crop['width'] / prescale_size)
+            crop['height'] = int(crop['height'] / prescale_size)
             result['crops'][i] = crop
         return result
 
@@ -310,10 +310,7 @@ class SmartCrop:  # pylint:disable=too-many-instance-attributes
 
         for y in range(0, target_height_down_sample, down_sample):
             for x in range(0, target_width_down_sample, down_sample):
-                index = int(
-                    math.floor(y * inv_down_sample) * target_width +
-                    math.floor(x * inv_down_sample)
-                )
+                index = int((y * target_width + x) * inv_down_sample)
                 importance = self.importance(crop, x, y)
                 detail = target_data[index][1] / 255
                 score['skin'] += (
